@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Volt — Electric Scooter Companion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=3"/>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <script type="text/babel" src="icons.jsx"></script>
+  <script type="text/babel" src="widgets.jsx"></script>
+  <script type="text/babel" src="home.jsx"></script>
+  <script type="text/babel" src="screens.jsx"></script>
+
+  <script type="text/babel">
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "battery": 100,
+      "locked": false,
+      "connected": true
+    }/*EDITMODE-END*/;
+
+    function TabBar({ tab, setTab }) {
+      const tabs = [
+        { id: 'map', l: 'Track', ic: <IcoMap size={22}/> },
+        { id: 'stats', l: 'Stats', ic: <IcoChart size={22}/> },
+        { id: 'home', l: 'Drive', ic: <IcoHome size={22}/> },
+        { id: 'battery', l: 'Power', ic: <IcoBolt size={22}/> },
+        { id: 'profile', l: 'Me', ic: <IcoUser size={22}/> },
+      ];
+      return (
+        <div className="tabbar">
+          {tabs.map(t => (
+            <button key={t.id} className={`tab ${tab === t.id ? 'active' : ''}`}
+                    onClick={() => setTab(t.id)}>
+              {t.ic}
+              <span>{t.l}</span>
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    function App() {
+      const [tweaks, setTweaks] = React.useState(TWEAK_DEFAULTS);
+      const [editMode, setEditMode] = React.useState(false);
+
+      const [state, setState] = React.useState({
+        battery: TWEAK_DEFAULTS.battery,
+        locked: TWEAK_DEFAULTS.locked,
+        connected: TWEAK_DEFAULTS.connected,
+        range: Math.round(TWEAK_DEFAULTS.battery * 1.58),
+        odo: 3412,
+        temp: 28,
+        rider: 'Arjun',
+      });
+
+      // sync tweaks → state
+      React.useEffect(() => {
+        setState(s => ({
+          ...s,
+          battery: tweaks.battery,
+          locked: tweaks.locked,
+          connected: tweaks.connected,
+          range: Math.round(tweaks.battery * 1.58),
+        }));
+      }, [tweaks]);
+
+      const [tab, setTab] = React.useState(() => localStorage.getItem('volt-tab') || 'home');
+      React.useEffect(() => { localStorage.setItem('volt-tab', tab); }, [tab]);
+
+      const nav = (t) => setTab(t);
+
+      // edit mode wiring
+      React.useEffect(() => {
+        const listener = (e) => {
+          if (e.data?.type === '__activate_edit_mode') setEditMode(true);
+          if (e.data?.type === '__deactivate_edit_mode') setEditMode(false);
+        };
+        window.addEventListener('message', listener);
+        window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+        return () => window.removeEventListener('message', listener);
+      }, []);
+
+      const updateTweak = (key, val) => {
+        const next = { ...tweaks, [key]: val };
+        setTweaks(next);
+        window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [key]: val } }, '*');
+      };
+
+      const renderScreen = () => {
+        switch (tab) {
+          case 'home':    return <HomeScreen state={state} setState={setState} nav={nav}/>;
+          case 'map':     return <MapScreen state={state} nav={nav}/>;
+          case 'stats':   return <AnalyticsScreen state={state} nav={nav}/>;
+          case 'battery': return <BatteryScreen state={state} nav={nav}/>;
+          case 'profile': return <ProfileScreen state={state} nav={nav}/>;
+          case 'devices': return <DevicesScreen state={state} setState={setState} nav={nav}/>;
+          default:        return <HomeScreen state={state} setState={setState} nav={nav}/>;
+        }
+      };
+
+      return (
+        <div className="page">
+          <div className="page-head">
+            <div className="brand">
+              <div className="brand-mark">V</div>
+              <div className="brand-text">
+                <div className="t1">Volt</div>
+                <div className="t2">Electric Companion · Prototype</div>
+              </div>
+            </div>
+            <div className="page-meta" style={{ maxWidth: 280 }}>
+              <div><strong>CRED-style dark</strong> · iPhone · 360×780</div>
+              <div>6 screens · ivory on near-black</div>
+            </div>
+          </div>
+
+          <div className="screens-row">
+            {[
+              { id: 'home', l: 'Home · Dashboard' },
+              { id: 'map', l: 'Live GPS Tracking' },
+              { id: 'stats', l: 'Ride Analytics' },
+              { id: 'battery', l: 'Battery Detail' },
+              { id: 'devices', l: 'Bluetooth Devices' },
+              { id: 'profile', l: 'Profile & Settings' },
+            ].map(s => (
+              <div key={s.id} className="screen-slot" data-screen-label={s.l}>
+                <IOSDevice width={360} height={780} dark={true}>
+                  {(() => {
+                    const subState = state;
+                    const subNav = (t) => { /* no-op in tiles */ };
+                    const Comp = {
+                      home:    <HomeScreen state={subState} setState={setState} nav={subNav}/>,
+                      map:     <MapScreen state={subState} nav={subNav}/>,
+                      stats:   <AnalyticsScreen state={subState} nav={subNav}/>,
+                      battery: <BatteryScreen state={subState} nav={subNav}/>,
+                      devices: <DevicesScreen state={subState} setState={setState} nav={subNav}/>,
+                      profile: <ProfileScreen state={subState} nav={subNav}/>,
+                    }[s.id];
+                    return (
+                      <div style={{ position: 'relative', height: '100%', background: '#07090B' }}>
+                        {Comp}
+                        <TabBar tab={s.id === 'devices' ? 'profile' : s.id} setTab={() => {}}/>
+                      </div>
+                    );
+                  })()}
+                </IOSDevice>
+                <div className="screen-label">{s.l}</div>
+              </div>
+            ))}
+          </div>
+
+          {editMode && (
+            <div className="tweaks-panel">
+              <h4><span style={{ width: 6, height: 6, background: 'var(--text)', borderRadius: 9 }}/> Tweaks</h4>
+
+              <div className="tweak-row">
+                <label>Battery · {tweaks.battery}%</label>
+                <input type="range" min="5" max="100" value={tweaks.battery}
+                       onChange={e => updateTweak('battery', Number(e.target.value))}/>
+              </div>
+
+              <div className="tweak-row">
+                <label>Lock state</label>
+                <div className="seg">
+                  <button className={tweaks.locked ? 'on' : ''} onClick={() => updateTweak('locked', true)}>Locked</button>
+                  <button className={!tweaks.locked ? 'on' : ''} onClick={() => updateTweak('locked', false)}>Unlocked</button>
+                </div>
+              </div>
+
+              <div className="tweak-row">
+                <label>Connection</label>
+                <div className="seg">
+                  <button className={tweaks.connected ? 'on' : ''} onClick={() => updateTweak('connected', true)}>Linked</button>
+                  <button className={!tweaks.connected ? 'on' : ''} onClick={() => updateTweak('connected', false)}>Offline</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App/>);
+  </script>
+</body>
+</html>
