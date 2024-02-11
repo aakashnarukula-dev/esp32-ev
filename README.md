@@ -2,7 +2,7 @@
 
 A dark, minimal, CRED-style iOS companion app for a connected electric scooter. Bluetooth telemetry, live GPS, ride analytics, battery health, and a reliable remote lock — wrapped in a quiet typographic dark UI.
 
-**🔗 Live web app →  https://aakashnarukula-dev.github.io/volt-ev-web/**
+**🔗 Live web app →  https://aakashnarukula-dev.github.io/esp32-ev/**
 <br/>
 <sub>Design prototype (static HTML): https://aakashnarukula-dev.github.io/esp32-ev/demo/</sub>
 
