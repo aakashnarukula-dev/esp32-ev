@@ -1,10 +1,8 @@
-# Volt — Electric Scooter Companion
+# ESP32-EV — Electric Scooter Companion
 
 A dark, minimal, CRED-style iOS companion app for a connected electric scooter. Bluetooth telemetry, live GPS, ride analytics, battery health, and a reliable remote lock — wrapped in a quiet typographic dark UI.
 
-**🔗 Live web app →  https://aakashnarukula-dev.github.io/esp32-ev/**
-<br/>
-<sub>Design prototype (static HTML): https://aakashnarukula-dev.github.io/esp32-ev/demo/</sub>
+**🔗 Live web app → https://aakashnarukula-dev.github.io/esp32-ev/**
 
 > The live app is the Expo / React Native web build of the real source, running a dummy vehicle simulation entirely in the browser — synthetic GPS drift, battery drain, lock/unlock responses. No ESP32 required. Unlock from the **Drive** tab and watch the **Maps** tab come alive.
 
@@ -55,12 +53,20 @@ Full tokens & motion: [`docs/design.md`](docs/design.md). Per-screen walkthrough
 ```
 .
 ├── README.md
-├── demo/                  ← live prototype (GitHub Pages)
-│   ├── index.html
-│   ├── styles.css
-│   └── *.jsx              ← React + Babel standalone
-├── images/
-│   └── screens/           ← rendered phone mockups (360 × 780)
+├── App.tsx                ← Expo entry
+├── app.json               ← Expo config (baseUrl /esp32-ev)
+├── package.json
+├── src/
+│   ├── screens/           ← Drive, Maps, Charge, Me and child screens
+│   ├── components/        ← ScooterHero, TabBar, DeviceFrame, …
+│   ├── lib/               ← geocode, routing, geo, chargers, esp32
+│   ├── store/             ← Redux (voltSlice, uiSlice)
+│   ├── navigation/
+│   └── theme/
+├── mock/                  ← in-browser vehicle simulation
+├── firmware/              ← ESP32 reference sketch
+├── _expo/ · assets/ · index.html · metadata.json   ← prebuilt web build (GitHub Pages)
+├── images/screens/        ← rendered phone mockups
 └── docs/
     ├── design.md
     └── screens.md
